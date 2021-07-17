@@ -8,6 +8,7 @@ DEBUG = True
 
 # a plain file database for the books
 db = TinyDB('books_db.json')
+db_idx = Query()
 
 # # a fast way to create the database
 # db.truncate() # clean the database file
@@ -19,11 +20,11 @@ db = TinyDB('books_db.json')
 # db.insert({'id': uuid.uuid4().hex, 'title': 'Green Eggs and Ham',
 #           'author': 'Dr. Seuss', 'read': True})
 
-# predefined list of book
-BOOKS = []
-for item in db:
-    BOOKS.append(item)
-    print(item)
+# # predefined list of book
+# BOOKS = []
+# for item in db:
+#     BOOKS.append(item)
+#     print(item)
 
 # print(db.all())
 
@@ -68,14 +69,24 @@ def all_books():
     response_object = {'status': 'success'}
     if request.method == 'POST':
         post_data = request.get_json()
-        BOOKS.append({
+        db.insert({
             'id': uuid.uuid4().hex,
             'title': post_data.get('title'),
             'author': post_data.get('author'),
             'read': post_data.get('read')
         })
+        # BOOKS.append({
+        #     'id': uuid.uuid4().hex,
+        #     'title': post_data.get('title'),
+        #     'author': post_data.get('author'),
+        #     'read': post_data.get('read')
+        # })
         response_object['message'] = 'Book added!'
     else:
+        BOOKS = []
+        for item in db:
+            BOOKS.append(item)
+            # print(item)
         response_object['books'] = BOOKS
     return jsonify(response_object)
 
@@ -85,13 +96,25 @@ def single_book(book_id):
     response_object = {'status': 'success'}
     if request.method == 'PUT':
         post_data = request.get_json()
-        remove_book(book_id)
-        BOOKS.append({
-            'id': uuid.uuid4().hex,
+        db.update({
             'title': post_data.get('title'),
             'author': post_data.get('author'),
             'read': post_data.get('read')
-        })
+        }, db_idx.id == book_id)
+        # remove_book(book_id)
+        # db.insert({
+        #     'id': uuid.uuid4().hex,
+        #     'title': post_data.get('title'),
+        #     'author': post_data.get('author'),
+        #     'read': post_data.get('read')
+        # })
+
+        # BOOKS.append({
+        #     'id': uuid.uuid4().hex,
+        #     'title': post_data.get('title'),
+        #     'author': post_data.get('author'),
+        #     'read': post_data.get('read')
+        # })
         response_object['message'] = 'Book updated!'
     if request.method == 'DELETE':
         remove_book(book_id)
@@ -100,10 +123,11 @@ def single_book(book_id):
 
 
 def remove_book(book_id):
-    for book in BOOKS:
-        if book['id'] == book_id:
-            BOOKS.remove(book)
-            return True
+    db.remove(db_idx.id == book_id)
+    # for book in BOOKS:
+    #     if book['id'] == book_id:
+    #         BOOKS.remove(book)
+    #         return True
     return False
 
 
